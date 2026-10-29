@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tablero de preguntas</title>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060b2a;--panel:#0d1440;--ink:#fff;--muted:#9fb0ff;--line:#2a3a9a;--gold:#ffd24a;--cell:#1230c4;--cell-hi:#2a4bff;--head:#0a1fa0;--used:#0a1250;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#e9edff;--panel:#fff;--ink:#0b1440;--muted:#41508f;--line:#b8c4ff;--used:#9aa7e0}}
+:root[data-theme="light"]{--bg:#e9edff;--panel:#fff;--ink:#0b1440;--muted:#41508f;--line:#b8c4ff;--used:#9aa7e0}
+:root[data-theme="dark"]{--bg:#060b2a;--panel:#0d1440;--ink:#fff;--muted:#9fb0ff;--line:#2a3a9a;--used:#0a1250}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;padding:12px 12px 24px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;max-width:1400px;margin:0 auto 10px}
+h1{font-size:clamp(18px,3vw,28px);margin:0;letter-spacing:.06em;color:var(--gold);text-transform:uppercase}
+.tools{display:flex;flex-wrap:wrap;gap:6px}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:14px}
+.btn:hover{border-color:var(--gold)}
+.btn.on{background:var(--gold);color:#241a00;border-color:var(--gold);font-weight:700}
+.btn.warn{border-color:#d64545;color:#ff9a9a}
+.board{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:clamp(3px,.6vw,8px);padding:clamp(4px,.8vw,10px);background:#000;border-radius:12px}
+.cat{background:var(--head);color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;min-height:clamp(54px,9vw,110px);padding:6px;border-radius:6px;font-weight:800;text-transform:uppercase;font-size:clamp(10px,1.7vw,22px);line-height:1.15;overflow-wrap:anywhere;border:2px solid #1f3bff}
+.cat input{width:100%;background:rgba(0,0,0,.35);color:#fff;border:1px dashed var(--gold);border-radius:4px;padding:6px 2px;text-align:center;font:inherit;text-transform:uppercase}
+.tile{background:var(--cell);color:var(--gold);border:0;border-radius:6px;min-height:clamp(48px,9vw,104px);font-weight:900;font-size:clamp(16px,3.6vw,52px);text-shadow:2px 2px 0 rgba(0,0,0,.45);transition:transform .12s,background .12s}
+.tile:hover{background:var(--cell-hi);transform:scale(1.04)}
+.tile.used{background:var(--used);color:transparent;text-shadow:none;cursor:default;transform:none}
+.tile.used:hover{background:var(--used)}
+.edit .tile{outline:2px dashed var(--gold);outline-offset:-4px}
+.edit .tile.used{color:var(--gold);opacity:.5}
+.hint{max-width:1400px;margin:10px auto 0;color:var(--muted);font-size:13px;text-align:center}
+.ov{position:fixed;inset:0;background:rgba(2,5,25,.88);display:none;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));z-index:10}
+.ov.show{display:flex}
+.card{width:min(900px,100%);max-height:100%;overflow:auto;background:var(--panel);border:2px solid var(--gold);border-radius:16px;padding:clamp(16px,3vw,36px);text-align:center}
+.meta{color:var(--gold);font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:clamp(13px,2vw,20px)}
+.q{font-size:clamp(22px,4.6vw,52px);font-weight:700;line-height:1.25;margin:18px 0;overflow-wrap:anywhere;white-space:pre-wrap}
+.a{font-size:clamp(20px,4vw,44px);color:#6dff9c;font-weight:800;margin:10px 0 18px;overflow-wrap:anywhere;white-space:pre-wrap;min-height:1.3em}
+.row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px}
+.card label{display:block;text-align:left;color:var(--muted);font-size:13px;margin:12px 0 4px}
+.card textarea{width:100%;min-height:90px;background:rgba(0,0,0,.3);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;font-size:16px;resize:vertical}
+@media (max-width:560px){body{padding:8px 6px 20px}.btn{padding:6px 9px;font-size:13px}}
+:root,:root:not([data-theme="dark"]),:root[data-theme="light"]{--bg:#05060f;--panel:#0d1440;--ink:#fff;--muted:#9fb0ff;--line:#2a3a9a;--used:#0a1250}
+body{background:radial-gradient(ellipse at 50% 25%,#111b4d 0,#05060f 72%) fixed;color-scheme:dark}
+h1{font-family:Bungee,Impact,sans-serif;text-shadow:-2px 0 rgba(255,40,80,.6),2px 0 rgba(0,220,255,.6),0 0 14px rgba(255,210,74,.5);animation:glitch 6s infinite}
+#noise{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none;z-index:40;opacity:.07;mix-blend-mode:screen;transition:opacity .18s}
+.vig{position:fixed;inset:0;pointer-events:none;z-index:49;background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.45) 100%)}
+.scan{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden;background:repeating-linear-gradient(to bottom,rgba(0,0,0,.22) 0,rgba(0,0,0,.22) 1px,transparent 1px,transparent 3px)}
+.scan::after{content:"";position:absolute;left:0;right:0;height:18vh;top:-18vh;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.06),transparent);animation:roll 7s linear infinite}
+.tv{position:relative;max-width:1400px;margin:0 auto;padding:clamp(10px,2vw,26px) clamp(10px,2vw,26px) clamp(28px,3.8vw,46px);border-radius:28px;background:linear-gradient(145deg,#3a3d4a,#17181f 55%,#2a2c36);box-shadow:0 20px 50px rgba(0,0,0,.6),inset 0 2px 2px rgba(255,255,255,.18),inset 0 -3px 6px rgba(0,0,0,.6)}
+.tv.on{animation:crtOn .9s cubic-bezier(.2,.8,.2,1)}
+.tv::after{content:"";position:absolute;right:clamp(18px,3vw,40px);bottom:clamp(9px,1.4vw,18px);width:9px;height:9px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 8px #ff3b3b;animation:led 2.4s ease-in-out infinite}
+.osd{position:absolute;left:clamp(20px,3vw,42px);bottom:clamp(4px,.9vw,10px);font-family:VT323,monospace;font-size:clamp(15px,2.2vw,26px);color:#6dff9c;text-shadow:0 0 6px #6dff9c;letter-spacing:.08em;pointer-events:none}
+.osd::after{content:"_";animation:blink 1s steps(1) infinite}
+.tv .board{max-width:none;margin:0;position:relative;overflow:hidden;border-radius:22px/26px;box-shadow:inset 0 0 60px rgba(0,0,0,.85),inset 0 0 0 2px #000,0 0 28px rgba(60,90,255,.3);animation:flicker 5s infinite;filter:saturate(1.15) contrast(1.05)}
+.tv .board::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%)}
+.cat{font-family:Bungee,Impact,sans-serif;font-size:clamp(9px,1.35vw,18px);background:linear-gradient(180deg,#1733d4,#0a1a8a);text-shadow:-1px 0 rgba(255,40,80,.6),1px 0 rgba(0,220,255,.6)}
+.tile{font-family:Bungee,Impact,sans-serif;background:linear-gradient(180deg,#2146ea,#0f26a8);text-shadow:-2px 0 rgba(255,40,80,.55),2px 0 rgba(0,220,255,.55),0 0 14px rgba(255,210,74,.7)}
+.tile:hover{animation:jit .25s steps(2) infinite}
+.tile.used{color:transparent;text-shadow:none;animation:snow .4s steps(4) infinite;background-color:#04061a;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>")}
+.tile.used:hover{animation:snow .4s steps(4) infinite}
+.edit .tile.used{color:var(--gold);opacity:.6}
+.card{position:relative;background:#070b2e;border-radius:22px;box-shadow:0 0 0 6px #1b1d28,0 0 0 8px #3a3d4a,0 0 60px rgba(60,90,255,.35)}
+.card.crt{animation:crtOn .55s cubic-bezier(.2,.8,.2,1)}
+.q,.a{font-family:VT323,monospace}
+.q{font-size:clamp(28px,6vw,66px);line-height:1.1;text-shadow:-1px 0 rgba(255,40,80,.5),1px 0 rgba(0,220,255,.5),0 0 10px rgba(255,255,255,.35)}
+.a{font-size:clamp(26px,5vw,56px);text-shadow:0 0 10px rgba(109,255,156,.7)}
+.a.glitch{animation:ansIn .5s}
+@keyframes crtOn{0%{transform:scale(1,.004);filter:brightness(12);opacity:.2}35%{transform:scale(1,.004);filter:brightness(6);opacity:1}55%{transform:scale(1,1.04);filter:brightness(2.2)}100%{transform:scale(1,1);filter:none}}
+@keyframes flicker{0%,100%{opacity:1}4%{opacity:.96}6%{opacity:1}52%{opacity:.985}54%{opacity:1}80%{opacity:.97}81%{opacity:1}}
+@keyframes roll{to{top:100%}}
+@keyframes led{50%{opacity:.35}}
+@keyframes blink{50%{opacity:0}}
+@keyframes glitch{0%,90%,100%{transform:none}91%{transform:translate(-3px,1px) skewX(6deg)}93%{transform:translate(3px,-1px) skewX(-6deg)}95%{transform:none}}
+@keyframes jit{0%{transform:scale(1.04) translate(-1px,0)}100%{transform:scale(1.04) translate(1px,1px)}}
+@keyframes snow{0%{background-position:0 0}25%{background-position:-30px 17px}50%{background-position:21px -44px}75%{background-position:-47px -9px}100%{background-position:12px 33px}}
+@keyframes ansIn{0%{opacity:0;transform:translateX(-8px) skewX(10deg);filter:blur(2px)}30%{opacity:1;transform:translateX(6px) skewX(-8deg)}60%{transform:translateX(-3px)}100%{transform:none;filter:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.x{position:absolute;top:10px;right:10px;padding:4px 10px;line-height:1.2}
+</style>
+</head>
+<body>
+<canvas id="noise"></canvas><div class="vig"></div><div class="scan"></div>
+<div class="bar">
+  <h1>Tablero de preguntas</h1>
+  <div class="tools">
+    <button class="btn" id="bEdit">✎ Editar</button>
+    <button class="btn" id="bReset">Reiniciar tablero</button>
+    <button class="btn" id="bData">Exportar / Importar</button>
+    <button class="btn" id="bFull">Pantalla completa</button>
+  </div>
+</div>
+<div class="tv" id="tv"><div class="board" id="board"></div><div class="osd">CH 01 ▸ RONDA 1</div></div>
+<p class="hint" id="hint"></p>
+
+<div class="ov" id="ovPlay"><div class="card">
+  <button class="btn x" id="pX" aria-label="Cerrar">✕</button>
+  <div class="meta" id="pMeta"></div>
+  <div class="q" id="pQ"></div>
+  <div class="a" id="pA"></div>
+  <div class="row">
+    <button class="btn on" id="pShow">Mostrar respuesta</button>
+  </div>
+</div></div>
+
+<div class="ov" id="ovEdit"><div class="card">
+  <div class="meta" id="eMeta"></div>
+  <label for="eQ">Pregunta</label><textarea id="eQ"></textarea>
+  <label for="eA">Respuesta</label><textarea id="eA" style="min-height:60px"></textarea>
+  <div class="row">
+    <button class="btn on" id="eSave">Guardar</button>
+    <button class="btn" id="eUse">Marcar / desmarcar usada</button>
+    <button class="btn" id="eCancel">Cancelar</button>
+  </div>
+</div></div>
+
+<div class="ov" id="ovData"><div class="card">
+  <div class="meta">Exportar / Importar</div>
+  <label for="dText">Copia este texto para guardar tu tablero, o pega uno guardado y pulsa «Importar».</label>
+  <textarea id="dText" style="min-height:220px;font-family:monospace;font-size:13px"></textarea>
+  <div class="row">
+    <button class="btn on" id="dImport">Importar</button>
+    <button class="btn" id="dClose">Cerrar</button>
+  </div>
+  <div class="hint" id="dMsg"></div>
+</div></div>
+
+<script>
+(function(){
+var VALUES=[100,200,300,400,500], KEY='tablero-preguntas-v1';
+var ROUND1=['Cultura general','Series y Películas','Anime','Frase y decir personaje','YouTube','Videojuegos'];
+var CG=[['¿Cuál es el planeta más grande del sistema solar?','Júpiter'],['¿Cuál es la capital de Australia?','Canberra (no Sídney)'],['¿En qué año llegó el ser humano a la Luna por primera vez?','1969, con la misión Apolo 11'],['¿Cuál es el océano más pequeño del mundo?','El océano Ártico'],['¿Cuántos países hay en Sudamérica?','12 (Argentina, Bolivia, Brasil, Chile, Colombia, Ecuador, Guyana, Paraguay, Perú, Surinam, Uruguay y Venezuela)']];
+var SP=[['¿Cuál es el nombre real de Darth Vader?','Anakin Skywalker'],['¿Cómo se llama el grupo principal de My Little Pony?','Las Mane Six: Twilight Sparkle, Rainbow Dash, Pinkie Pie, Applejack, Rarity y Fluttershy'],['¿Qué Vengadores viajaron en el tiempo en la película “Vengadores: Endgame”?','Capitán América, Iron Man, Hulk, Thor, Viuda Negra, Ojo de Halcón, Ant-Man, War Machine, Rocket y Nebula'],['¿Cuál fue la productora de la película “Backrooms”?','A24 (junto a Chernin Entertainment, Atomic Monster y 21 Laps)'],['¿Cuál es el nombre completo del autor de los diarios en la serie Gravity Falls?','Stanford Filbrick Pines (Ford Pines)']];
+SP=[SP[0],SP[1],SP[4],SP[2],SP[3]];
+var PRE=[CG,SP];
+function blank(){var c=[];for(var i=0;i<6;i++){c.push({name:ROUND1[i],qs:VALUES.map(function(v,j){var p=PRE[i]?PRE[i][j]:null;return{q:p?p[0]:'',a:p?p[1]:'',used:false}})})}return{cats:c}}
+function load(){try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(valid(d))return migrate(d)}}catch(e){}return blank()}
+function migrate(d){d.cats.forEach(function(c,i){if(/^Categoría \d$/.test(c.name))c.name=ROUND1[i]});PRE.forEach(function(arr,k){if(d.cats[k].name===ROUND1[k])d.cats[k].qs.forEach(function(s,j){if(!s.q&&!s.a){s.q=arr[j][0];s.a=arr[j][1]}})});var s1=d.cats[1].qs;if(s1[2].q===SP[3][0]&&s1[3].q===SP[4][0]&&s1[4].q===SP[2][0])d.cats[1].qs=[s1[0],s1[1],s1[4],s1[2],s1[3]];return d}
+function valid(d){return d&&Array.isArray(d.cats)&&d.cats.length===6&&d.cats.every(function(c){return c&&typeof c.name==='string'&&Array.isArray(c.qs)&&c.qs.length===5})}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}}
+var data=load(), edit=false, cur=null, resetArmed=false;
+var $=function(id){return document.getElementById(id)};
+var RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+var NZ=$('noise'),nctx=NZ.getContext('2d'),nW=160,nH=90,nimg,burstUntil=0,lastT=0;
+NZ.width=nW;NZ.height=nH;nimg=nctx.createImageData(nW,nH);
+function nframe(t){requestAnimationFrame(nframe);if(t-lastT<50)return;lastT=t;
+  var d=nimg.data,i,v;for(i=0;i<d.length;i+=4){v=Math.random()*255|0;d[i]=d[i+1]=d[i+2]=v;d[i+3]=255}
+  nctx.putImageData(nimg,0,0);
+  NZ.style.opacity=Date.now()<burstUntil?(RM?.3:.92):(RM?0:.07)}
+function burst(ms){burstUntil=Date.now()+(RM?Math.min(ms,120):ms)}
+function pop(ov){var c=ov.firstElementChild;c.classList.remove('crt');void c.offsetWidth;c.classList.add('crt')}
+function boot(){$('tv').classList.add('on');burst(900);requestAnimationFrame(nframe)}
+
+function render(){
+  var b=$('board');b.innerHTML='';b.className='board'+(edit?' edit':'');
+  data.cats.forEach(function(c,ci){
+    var h=document.createElement('div');h.className='cat';
+    if(edit){var inp=document.createElement('input');inp.value=c.name;inp.maxLength=40;inp.setAttribute('aria-label','Nombre de la categoría '+(ci+1));
+      inp.oninput=function(){c.name=inp.value;save()};h.appendChild(inp)}else{h.textContent=c.name}
+    b.appendChild(h);
+  });
+  VALUES.forEach(function(v,ri){
+    data.cats.forEach(function(c,ci){
+      var t=document.createElement('button');t.className='tile'+(c.qs[ri].used?' used':'');t.textContent=v;
+      t.setAttribute('aria-label',c.name+' por '+v);
+      t.onclick=function(){if(edit)openEdit(ci,ri);else if(!c.qs[ri].used)openPlay(ci,ri)};
+      b.appendChild(t);
+    });
+  });
+  $('bEdit').textContent=edit?'✔ Terminar edición':'✎ Editar';$('bEdit').className='btn'+(edit?' on':'');
+  $('hint').textContent=edit?'Modo edición: cambia los nombres de las categorías y pulsa cualquier casilla para escribir su pregunta y respuesta.':'Pulsa una casilla para ver su pregunta; al abrirla se apaga sola. Se cierra con Esc, con ✕ o tocando fuera.';
+  $('bReset').textContent='Reiniciar tablero';$('bReset').className='btn';resetArmed=false;
+}
+function show(id,on){$(id).classList.toggle('show',on)}
+function openPlay(ci,ri){cur={ci:ci,ri:ri};var c=data.cats[ci],s=c.qs[ri];s.used=true;save();
+  $('pMeta').textContent=c.name+' · '+VALUES[ri];
+  $('pQ').textContent=s.q||'Esta casilla aún no tiene pregunta. Pulsa «Editar» para escribirla.';
+  $('pA').textContent='';$('pShow').style.display='';burst(420);setTimeout(function(){show('ovPlay',true);pop($('ovPlay'))},140)}
+function closePlay(mark){if(cur&&mark){data.cats[cur.ci].qs[cur.ri].used=true;save()}cur=null;burst(260);show('ovPlay',false);render()}
+function openEdit(ci,ri){cur={ci:ci,ri:ri};var s=data.cats[ci].qs[ri];
+  $('eMeta').textContent=data.cats[ci].name+' · '+VALUES[ri];$('eQ').value=s.q;$('eA').value=s.a;show('ovEdit',true);$('eQ').focus()}
+function closeEdit(){cur=null;show('ovEdit',false);render()}
+
+$('pShow').onclick=function(){var s=data.cats[cur.ci].qs[cur.ri];$('pA').textContent=s.a||'(sin respuesta escrita)';$('pShow').style.display='none';burst(160);$('pA').className='a';void $('pA').offsetWidth;$('pA').className='a glitch'};
+$('pX').onclick=function(){closePlay(false)};
+$('ovPlay').onclick=function(e){if(e.target===this)closePlay(false)};
+$('eSave').onclick=function(){var s=data.cats[cur.ci].qs[cur.ri];s.q=$('eQ').value.trim();s.a=$('eA').value.trim();save();closeEdit()};
+$('eUse').onclick=function(){var s=data.cats[cur.ci].qs[cur.ri];s.used=!s.used;save();closeEdit()};
+$('eCancel').onclick=closeEdit;
+$('bEdit').onclick=function(){edit=!edit;burst(320);render()};
+$('bReset').onclick=function(){
+  if(!resetArmed){resetArmed=true;$('bReset').textContent='¿Seguro? Pulsa otra vez';$('bReset').className='btn warn';return}
+  data.cats.forEach(function(c){c.qs.forEach(function(q){q.used=false})});save();render()};
+$('bData').onclick=function(){$('dText').value=JSON.stringify(data,null,1);$('dMsg').textContent='';show('ovData',true)};
+$('dClose').onclick=function(){show('ovData',false)};
+$('dImport').onclick=function(){try{var d=JSON.parse($('dText').value);if(!valid(d))throw 0;data=d;save();render();$('dMsg').textContent='Tablero importado.'}catch(e){$('dMsg').textContent='El texto no es un tablero válido (deben ser 6 categorías de 5 preguntas).'}};
+$('bFull').onclick=function(){try{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen()}catch(e){}};
+document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;
+  if($('ovPlay').classList.contains('show'))closePlay(false);else if($('ovEdit').classList.contains('show'))closeEdit();else show('ovData',false)});
+render();boot();
+})();
+</script>
+</body>
+</html>
